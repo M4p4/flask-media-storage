@@ -9,6 +9,11 @@ from PIL import Image
 
 
 extensions = {"JPEG": ".jpg", "PNG": ".png", "WEBP": ".webp"}
+dimensions = {
+    "720": (1280, 720),
+    "480": (854, 480),
+    "360": (480, 360),
+}
 
 
 def process_video(source):
@@ -17,6 +22,7 @@ def process_video(source):
     cover = None
     try:
         thumbnail_config = app.config["IMAGE_SETTINGS"]["THUMBNAIL"]
+        video_config = app.config["VIDEO_SETTINGS"]
 
         source = os.path.join(os.getcwd(), "example3.mp4")
         video_id = "1337"
@@ -43,7 +49,6 @@ def process_video(source):
             frame_number = (i + 1) * step_size
             screenshots.append(get_video_screenshot(video, frame_number))
         video.release()
-
         # cover
         cover_index = random.randint(0, 5 if (amount - 1) >= 5 else (amount - 1))
         cover_screenshot = screenshots[cover_index]
@@ -55,6 +60,14 @@ def process_video(source):
                 create_thumbnail(screenshots[i], video_id, filename, i + 1)
             )
 
+        # videos
+        for video_dimensions in video_config.get("formats"):
+            video = cv2.VideoCapture(source)
+            create_video(
+                video, dimensions.get(str(video_dimensions)), video_id, filename
+            )
+            video.release()
+
     except Exception as e:
         print(str(e))
         # rollback something went wrong
@@ -63,6 +76,54 @@ def process_video(source):
             delete_file(os.path.join(app.root_path, thumbnail))
         return None, [], []
     return cover, thumbnails, videos
+
+
+def create_video(video, video_dimensions, id: str, filename: str):
+    video_config = app.config["VIDEO_SETTINGS"]
+    final_path = (
+        os.path.join(
+            app.root_path,
+            app.config["BASE_DIR"],
+            video_config.get("path"),
+        )
+        .replace("{ID}", id)
+        .replace("{FORMAT}", str(video_dimensions[1]))
+    )
+    create_path(final_path)
+    final_filename = "%s%s" % (
+        video_config.get("filename"),
+        ".mp4",
+    )
+    final_filename = (
+        final_filename.replace("{FILENAME}", filename)
+        .replace("{ID}", id)
+        .replace("{FORMAT}", str(video_dimensions[1]))
+    )
+    width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    is_portrait = height > width
+    if is_portrait:
+        output_width = video_dimensions[1]
+        output_height = video_dimensions[0]
+    else:
+        output_width = video_dimensions[0]
+        output_height = video_dimensions[1]
+    fourcc = cv2.VideoWriter_fourcc(*"avc1")
+    video_writer = cv2.VideoWriter(
+        os.path.join(final_path, final_filename),
+        fourcc,
+        30,
+        (output_width, output_height),
+    )
+    while True:
+        ret, frame = video.read()
+        if not ret:
+            break
+        resized_frame = cv2.resize(
+            frame, (output_width, output_height), interpolation=cv2.INTER_AREA
+        )
+        video_writer.write(resized_frame)
+    video_writer.release()
 
 
 def get_video_screenshot(video, frame_number):
@@ -83,13 +144,13 @@ def create_thumbnail(screenshot, id: str, filename: str, seq: int):
         app.config["BASE_DIR"],
         thumbnail_path,
     )
+    create_path(final_path)
     final_filename = "%s%s" % (
         thumbnail_config.get("filename"),
         extensions.get(thumbnail_config.get("extension")),
     )
     final_filename = final_filename.replace("{FILENAME}", filename)
     final_filename = final_filename.replace("{SEQ}", str(seq))
-    create_path(final_path)
     image = Image.open(io.BytesIO(screenshot))
     is_portrait = image.height > image.width
     image.thumbnail((thumbnail_config.get("width"), thumbnail_config.get("height")))
