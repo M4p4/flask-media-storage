@@ -24,3 +24,6 @@ htmlcov/
 .coverage
 .coverage.*
 *,cover
+
+# storage path
+app/media/
