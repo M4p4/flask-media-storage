@@ -71,7 +71,6 @@ def process_video(source, settings):
         for thumbnail in thumbnails:
             delete_file(os.path.join(app.root_path, thumbnail))
         return None, [], []
-    print(videos)
     return cover, thumbnails, videos
 
 
