@@ -13,7 +13,10 @@ extensions = {"JPG": ".jpg", "PNG": ".png", "WEBP": ".webp"}
 def process_video(source):
     thumbnail_config = app.config["IMAGE_SETTINGS"]["THUMBNAIL"]
 
+    print(app.static_folder)
+
     source = os.path.join(os.getcwd(), "example2.mp4")
+    video_id = "1337"
 
     video = cv2.VideoCapture(source)
 
@@ -40,7 +43,7 @@ def process_video(source):
     # cover
     cover_index = random.randint(0, 5 if (amount - 1) >= 5 else (amount - 1))
     cover_screenshot = screenshots[cover_index]
-    create_cover(cover_screenshot)
+    create_cover(cover_screenshot, video_id)
 
 
 def get_video_screenshot(video, frame_number):
@@ -50,9 +53,13 @@ def get_video_screenshot(video, frame_number):
     return np.array(img).tobytes()
 
 
-def create_cover(screenshot):
+def create_cover(screenshot, id: str):
     cover_config = app.config["IMAGE_SETTINGS"]["COVER"]
-    final_path = os.path.join(os.getcwd(), cover_config.get("path"))
+    final_path = os.path.join(
+        app.root_path,
+        app.config["BASE_DIR"],
+        cover_config.get("path").replace("{ID}", id),
+    )
     filename = "%s%s" % (
         cover_config.get("filename"),
         extensions.get(cover_config.get("extension")),
