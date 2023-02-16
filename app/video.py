@@ -63,8 +63,10 @@ def process_video(source):
         # videos
         for video_dimensions in video_config.get("formats"):
             video = cv2.VideoCapture(source)
-            create_video(
-                video, dimensions.get(str(video_dimensions)), video_id, filename
+            videos.append(
+                create_video(
+                    video, dimensions.get(str(video_dimensions)), video_id, filename
+                )
             )
             video.release()
 
@@ -75,19 +77,21 @@ def process_video(source):
         for thumbnail in thumbnails:
             delete_file(os.path.join(app.root_path, thumbnail))
         return None, [], []
+    print(videos)
     return cover, thumbnails, videos
 
 
 def create_video(video, video_dimensions, id: str, filename: str):
     video_config = app.config["VIDEO_SETTINGS"]
-    final_path = (
-        os.path.join(
-            app.root_path,
-            app.config["BASE_DIR"],
-            video_config.get("path"),
-        )
+    video_path = (
+        video_config.get("path")
         .replace("{ID}", id)
         .replace("{FORMAT}", str(video_dimensions[1]))
+    )
+    final_path = os.path.join(
+        app.root_path,
+        app.config["BASE_DIR"],
+        video_path,
     )
     create_path(final_path)
     final_filename = "%s%s" % (
@@ -124,6 +128,11 @@ def create_video(video, video_dimensions, id: str, filename: str):
         )
         video_writer.write(resized_frame)
     video_writer.release()
+    return os.path.join(
+        app.config["BASE_DIR"],
+        video_path,
+        final_filename,
+    )
 
 
 def get_video_screenshot(video, frame_number):
