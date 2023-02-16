@@ -18,7 +18,7 @@ def process_video(source):
     try:
         thumbnail_config = app.config["IMAGE_SETTINGS"]["THUMBNAIL"]
 
-        source = os.path.join(os.getcwd(), "example2.mp4")
+        source = os.path.join(os.getcwd(), "example3.mp4")
         video_id = "1337"
         filename = "test"
 
@@ -91,12 +91,28 @@ def create_thumbnail(screenshot, id: str, filename: str, seq: int):
     final_filename = final_filename.replace("{SEQ}", str(seq))
     create_path(final_path)
     image = Image.open(io.BytesIO(screenshot))
+    is_portrait = image.height > image.width
     image.thumbnail((thumbnail_config.get("width"), thumbnail_config.get("height")))
     if thumbnail_config.get("extension") != "PNG":
         image.convert("RGB")
-    image.save(
-        os.path.join(final_path, final_filename), thumbnail_config.get("extension")
-    )
+
+    if is_portrait:
+        size = (thumbnail_config.get("width"), thumbnail_config.get("height"))
+        background = Image.new("RGB", size, (1, 1, 1))
+        background.paste(
+            image,
+            (int((size[0] - image.size[0]) / 2), int((size[1] - image.size[1]) / 2)),
+        )
+        if thumbnail_config.get("extension") != "PNG":
+            background.convert("RGB")
+        background.save(
+            os.path.join(final_path, final_filename), thumbnail_config.get("extension")
+        )
+        background.close()
+    else:
+        image.save(
+            os.path.join(final_path, final_filename), thumbnail_config.get("extension")
+        )
     image.close()
     return os.path.join(
         app.config["BASE_DIR"],
@@ -120,10 +136,27 @@ def create_cover(screenshot, id: str, filename: str):
     final_filename = final_filename.replace("{FILENAME}", filename)
     create_path(final_path)
     image = Image.open(io.BytesIO(screenshot))
+    is_portrait = image.height > image.width
     image.thumbnail((cover_config.get("width"), cover_config.get("height")))
     if cover_config.get("extension") != "PNG":
         image.convert("RGB")
-    image.save(os.path.join(final_path, final_filename), cover_config.get("extension"))
+    if is_portrait:
+        size = (cover_config.get("width"), cover_config.get("height"))
+        background = Image.new("RGB", size, (1, 1, 1))
+        background.paste(
+            image,
+            (int((size[0] - image.size[0]) / 2), int((size[1] - image.size[1]) / 2)),
+        )
+        if cover_config.get("extension") != "PNG":
+            background.convert("RGB")
+        background.save(
+            os.path.join(final_path, final_filename), cover_config.get("extension")
+        )
+        background.close()
+    else:
+        image.save(
+            os.path.join(final_path, final_filename), cover_config.get("extension")
+        )
     image.close()
     return os.path.join(app.config["BASE_DIR"], cover_path, final_filename)
 
