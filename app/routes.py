@@ -5,8 +5,15 @@ from flask import send_from_directory
 
 @app.route("/")
 def index():
-    id = "1337"
-    video.process_video("")
+    video_id = 1337
+    filename = "test"
+    settings = {
+        "id": str(video_id),
+        "filename": filename,
+        "use_watermark": True,
+        "watermark_text": "watermark.com",
+    }
+    video.process_video("", settings)
     return "Flask Media Storage Version 0.1"
 
 

@@ -16,7 +16,7 @@ dimensions = {
 }
 
 
-def process_video(source):
+def process_video(source, settings):
     thumbnails = []
     videos = []
     cover = None
@@ -25,8 +25,6 @@ def process_video(source):
         video_config = app.config["VIDEO_SETTINGS"]
 
         source = os.path.join(os.getcwd(), "example3.mp4")
-        video_id = "1337"
-        filename = "test"
 
         video = cv2.VideoCapture(source)
 
@@ -52,21 +50,17 @@ def process_video(source):
         # cover
         cover_index = random.randint(0, 5 if (amount - 1) >= 5 else (amount - 1))
         cover_screenshot = screenshots[cover_index]
-        cover = create_cover(cover_screenshot, video_id, filename)
+        cover = create_cover(cover_screenshot, settings)
 
         # thumbnails
         for i in range(0, amount):
-            thumbnails.append(
-                create_thumbnail(screenshots[i], video_id, filename, i + 1)
-            )
+            thumbnails.append(create_thumbnail(screenshots[i], settings, i + 1))
 
         # videos
         for video_dimensions in video_config.get("formats"):
             video = cv2.VideoCapture(source)
             videos.append(
-                create_video(
-                    video, dimensions.get(str(video_dimensions)), video_id, filename
-                )
+                create_video(video, dimensions.get(str(video_dimensions)), settings)
             )
             video.release()
 
@@ -81,11 +75,11 @@ def process_video(source):
     return cover, thumbnails, videos
 
 
-def create_video(video, video_dimensions, id: str, filename: str):
+def create_video(video, video_dimensions, settings):
     video_config = app.config["VIDEO_SETTINGS"]
     video_path = (
         video_config.get("path")
-        .replace("{ID}", id)
+        .replace("{ID}", settings.get("id"))
         .replace("{FORMAT}", str(video_dimensions[1]))
     )
     final_path = os.path.join(
@@ -99,8 +93,8 @@ def create_video(video, video_dimensions, id: str, filename: str):
         ".mp4",
     )
     final_filename = (
-        final_filename.replace("{FILENAME}", filename)
-        .replace("{ID}", id)
+        final_filename.replace("{FILENAME}", settings.get("filename"))
+        .replace("{ID}", settings.get("id"))
         .replace("{FORMAT}", str(video_dimensions[1]))
     )
     width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -126,6 +120,25 @@ def create_video(video, video_dimensions, id: str, filename: str):
         resized_frame = cv2.resize(
             frame, (output_width, output_height), interpolation=cv2.INTER_AREA
         )
+        if settings.get("use_watermark"):
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            text = settings.get("watermark_text")
+            font_scale = 0.5
+            font_thickness = 1
+            text_size = cv2.getTextSize(text, font, font_scale, font_thickness)[0]
+            text_x = output_width - int(text_size[0] * 1.1)
+            text_y = output_height - int(text_size[1] * 1.1)
+            text_color = (255, 255, 255, 64)
+            cv2.putText(
+                resized_frame,
+                text,
+                (text_x, text_y),
+                font,
+                font_scale,
+                text_color,
+                font_thickness,
+                cv2.LINE_AA,
+            )
         video_writer.write(resized_frame)
     video_writer.release()
     return os.path.join(
@@ -142,10 +155,12 @@ def get_video_screenshot(video, frame_number):
     return np.array(img).tobytes()
 
 
-def create_thumbnail(screenshot, id: str, filename: str, seq: int):
+def create_thumbnail(screenshot, settings, seq: int):
     thumbnail_config = app.config["IMAGE_SETTINGS"]["THUMBNAIL"]
     thumbnail_path = (
-        thumbnail_config.get("path").replace("{ID}", id).replace("{SEQ}", str(seq))
+        thumbnail_config.get("path")
+        .replace("{ID}", settings.get("id"))
+        .replace("{SEQ}", str(seq))
     )
 
     final_path = os.path.join(
@@ -158,7 +173,7 @@ def create_thumbnail(screenshot, id: str, filename: str, seq: int):
         thumbnail_config.get("filename"),
         extensions.get(thumbnail_config.get("extension")),
     )
-    final_filename = final_filename.replace("{FILENAME}", filename)
+    final_filename = final_filename.replace("{FILENAME}", settings.get("filename"))
     final_filename = final_filename.replace("{SEQ}", str(seq))
     image = Image.open(io.BytesIO(screenshot))
     is_portrait = image.height > image.width
@@ -191,9 +206,9 @@ def create_thumbnail(screenshot, id: str, filename: str, seq: int):
     )
 
 
-def create_cover(screenshot, id: str, filename: str):
+def create_cover(screenshot, settings):
     cover_config = app.config["IMAGE_SETTINGS"]["COVER"]
-    cover_path = cover_config.get("path").replace("{ID}", id)
+    cover_path = cover_config.get("path").replace("{ID}", settings.get("id"))
     final_path = os.path.join(
         app.root_path,
         app.config["BASE_DIR"],
@@ -203,7 +218,7 @@ def create_cover(screenshot, id: str, filename: str):
         cover_config.get("filename"),
         extensions.get(cover_config.get("extension")),
     )
-    final_filename = final_filename.replace("{FILENAME}", filename)
+    final_filename = final_filename.replace("{FILENAME}", settings.get("filename"))
     create_path(final_path)
     image = Image.open(io.BytesIO(screenshot))
     is_portrait = image.height > image.width
