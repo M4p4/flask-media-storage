@@ -1,5 +1,9 @@
 from app import app
+from app import video
 
-@app.route('/')
+
+@app.route("/")
 def index():
-  return "Hello World!"
+    id = "1337"
+    video.process_video("")
+    return "Hello World!"

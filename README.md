@@ -1,9 +1,9 @@
-# Flask starter project
+# Flask Media Storage
 
-This project use a config.py file instead of an .env file.
+TODO
 
-#### To run use following command:
+#### To run FMS locally use the following command:
 
 ```
-flask run
+FLASK_DEBUG=1 flask run -p 3000
 ```
