@@ -30,7 +30,7 @@ def process_video(source, settings):
         thumbnail_config = app.config["IMAGE_SETTINGS"]["THUMBNAIL"]
         video_config = app.config["VIDEO_SETTINGS"]
 
-        source = os.path.join(os.getcwd(), "example3.mp4")
+        source = os.path.join(os.getcwd(), "example.mp4")
 
         video = cv2.VideoCapture(source)
 
@@ -148,7 +148,7 @@ def create_video(video, audio, video_dimensions, settings):
             .filter("scale", output_width, output_height)
             .drawtext(
                 fontfile="simhei.ttf",
-                text=settings.get("watermark_text "),
+                text=settings.get("watermark_text"),
                 x="w-tw-10",
                 y="h-th-10",
                 box=1,
