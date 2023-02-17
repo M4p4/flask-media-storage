@@ -7,8 +7,8 @@ import random
 import io
 from PIL import Image
 import moviepy.editor as mp
-import subprocess
 import shutil
+import ffmpeg
 
 
 extensions = {"JPEG": ".jpg", "PNG": ".png", "WEBP": ".webp"}
@@ -67,36 +67,16 @@ def process_video(source, settings):
 
         # videos
         for video_dimensions in video_config.get("formats"):
-            video = cv2.VideoCapture(source)
             video_path = create_video(
-                video, dimensions.get(str(video_dimensions)), settings
+                source, audio_temp_file, dimensions.get(str(video_dimensions)), settings
             )
             if video_path:
                 videos.append(video_path)
-                video.release()
-                ffmpeg_command = [
-                    "ffmpeg",
-                    "-y",
-                    "-i",
-                    os.path.join(app.root_path, video_path),
-                    "-i",
-                    audio_temp_file,
-                    "-c:v",
-                    "copy",
-                    "-c:a",
-                    "aac",
-                    os.path.join(app.root_path, video_path.replace(".mp4", "_tmp.mp4")),
-                ]
-                subprocess.call(ffmpeg_command)
-                delete_file(os.path.join(app.root_path, video_path))
-                os.rename(
-                    os.path.join(app.root_path, video_path.replace(".mp4", "_tmp.mp4")),
-                    os.path.join(app.root_path, video_path),
-                )
         delete_file(audio_temp_file)
+
         e2 = cv2.getTickCount()
         t = (e2 - e1) / cv2.getTickFrequency()
-        print(t)
+        print(f"Job done in {t} seconds")
 
     except Exception as e:
         print(str(e))
@@ -112,7 +92,7 @@ def process_video(source, settings):
     return cover, thumbnails, videos
 
 
-def create_video(video, video_dimensions, settings):
+def create_video(video, audio, video_dimensions, settings):
     video_config = app.config["VIDEO_SETTINGS"]
     video_path = (
         video_config.get("path")
@@ -135,8 +115,21 @@ def create_video(video, video_dimensions, settings):
         .replace("{FORMAT}", str(video_dimensions[1]))
     )
 
-    width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    try:
+        probe = ffmpeg.probe(video)
+    except ffmpeg.Error as e:
+        raise Exception(e.stderr)
+
+    video_stream = next(
+        (stream for stream in probe["streams"] if stream["codec_type"] == "video"), None
+    )
+    if video_stream is None:
+        raise Exception("No video stream found")
+
+    width = int(video_stream["width"])
+    height = int(video_stream["height"])
+    fps = int(video_stream["nb_frames"])
+
     is_portrait = height > width
     if is_portrait:
         output_width = video_dimensions[1]
@@ -148,44 +141,34 @@ def create_video(video, video_dimensions, settings):
     if height < output_height:
         return
 
-    fourcc = cv2.VideoWriter_fourcc(*"avc1")
-    fps = int(video.get(cv2.CAP_PROP_FPS))
-
-    video_writer = cv2.VideoWriter(
-        os.path.join(final_path, final_filename),
-        fourcc,
-        fps,
-        (output_width, output_height),
-    )
-    while True:
-        ret, frame = video.read()
-        if not ret:
-            break
-
-        resized_frame = cv2.resize(
-            frame, (output_width, output_height), interpolation=cv2.INTER_AREA
-        )
-        if settings.get("use_watermark"):
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            text = settings.get("watermark_text")
-            font_scale = video_dimensions[2]
-            font_thickness = 1
-            text_size = cv2.getTextSize(text, font, font_scale, font_thickness)[0]
-            text_x = output_width - int(text_size[0] * 1.1)
-            text_y = output_height - int(text_size[1] * 1.1)
-            text_color = (255, 255, 255, 64)
-            cv2.putText(
-                resized_frame,
-                text,
-                (text_x, text_y),
-                font,
-                font_scale,
-                text_color,
-                font_thickness,
-                cv2.LINE_AA,
+    font_size = int(math.floor(24 * dimensions.get(str(video_dimensions[1]))[2]))
+    video_source = (
+        (
+            ffmpeg.input(video)
+            .filter("scale", output_width, output_height)
+            .drawtext(
+                fontfile="simhei.ttf",
+                text=settings.get("watermark_text "),
+                x="w-tw-10",
+                y="h-th-10",
+                box=1,
+                boxcolor="black@0.2",
+                fontsize=font_size,
+                fontcolor="white",
             )
-        video_writer.write(resized_frame)
-    video_writer.release()
+        )
+        if settings.get("use_watermark")
+        else (ffmpeg.input(video).filter("scale", output_width, output_height))
+    )
+
+    audio_source = ffmpeg.input(audio)
+    ffmpeg.output(
+        video_source,
+        audio_source,
+        os.path.join(final_path, final_filename),
+        vcodec="libx264",
+        acodec="aac",
+    ).overwrite_output().run()
 
     return os.path.join(
         app.config["BASE_DIR"],
