@@ -8,6 +8,7 @@ import io
 from PIL import Image
 import moviepy.editor as mp
 import subprocess
+import shutil
 
 
 extensions = {"JPEG": ".jpg", "PNG": ".png", "WEBP": ".webp"}
@@ -23,12 +24,13 @@ def process_video(source, settings):
     thumbnails = []
     videos = []
     cover = None
+    audio_temp_file = None
     try:
         e1 = cv2.getTickCount()
         thumbnail_config = app.config["IMAGE_SETTINGS"]["THUMBNAIL"]
         video_config = app.config["VIDEO_SETTINGS"]
 
-        source = os.path.join(os.getcwd(), "example.mp4")
+        source = os.path.join(os.getcwd(), "example3.mp4")
 
         video = cv2.VideoCapture(source)
 
@@ -99,9 +101,13 @@ def process_video(source, settings):
     except Exception as e:
         print(str(e))
         # rollback something went wrong
-        delete_file(os.path.join(app.root_path, cover))
-        for thumbnail in thumbnails:
-            delete_file(os.path.join(app.root_path, thumbnail))
+        delete_directory(os.path.join(app.root_path, cover))
+        if len(thumbnails) > 0:
+            delete_directory(os.path.join(app.root_path, thumbnails[0]))
+        if len(videos) > 0:
+            delete_directory(os.path.join(app.root_path, videos[0]))
+        if audio_temp_file:
+            delete_directory(audio_temp_file)
         return None, [], []
     return cover, thumbnails, videos
 
@@ -207,6 +213,7 @@ def create_temporay_audio_file(video, settings, dimension="360"):
         app.config["BASE_DIR"],
         video_path,
     )
+    create_path(final_path)
     filename = "temp.mp3"
     target_bitrate = "32k"
     target_sampling_rate = 22050
@@ -316,6 +323,16 @@ def create_cover(screenshot, settings):
 def create_path(path: str):
     if not os.path.exists(path):
         os.makedirs(path)
+
+
+def delete_directory(path: str):
+    try:
+        dir_path = os.path.dirname(os.path.abspath(path))
+        shutil.rmtree(dir_path)
+        return True
+    except Exception as e:
+        print(str(e))
+        return False
 
 
 def delete_file(path):
