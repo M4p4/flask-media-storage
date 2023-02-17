@@ -10,9 +10,9 @@ from PIL import Image
 
 extensions = {"JPEG": ".jpg", "PNG": ".png", "WEBP": ".webp"}
 dimensions = {
-    "720": (1280, 720),
-    "480": (854, 480),
-    "360": (480, 360),
+    "720": (1280, 720, 1.0),
+    "480": (854, 480, 0.7),
+    "360": (480, 360, 0.5),
 }
 
 
@@ -122,7 +122,7 @@ def create_video(video, video_dimensions, settings):
         if settings.get("use_watermark"):
             font = cv2.FONT_HERSHEY_SIMPLEX
             text = settings.get("watermark_text")
-            font_scale = 0.5
+            font_scale = video_dimensions[2]
             font_thickness = 1
             text_size = cv2.getTextSize(text, font, font_scale, font_thickness)[0]
             text_x = output_width - int(text_size[0] * 1.1)

@@ -21,6 +21,11 @@ class Config(object):
             "width": 600,
             "height": 400,
         },
+        "IMAGE": {
+            "path": "images/{RANDOM}/",
+            "filename": "{FILENAME}",
+            "extension": "JPEG",
+        },
     }
 
     # VIDEO SETTINGS
