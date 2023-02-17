@@ -168,6 +168,7 @@ def create_video(video, audio, video_dimensions, settings):
         os.path.join(final_path, final_filename),
         vcodec="libx264",
         acodec="aac",
+        crf=video_config.get("crf"),
     ).overwrite_output().run()
 
     return os.path.join(

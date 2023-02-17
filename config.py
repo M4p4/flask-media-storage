@@ -37,4 +37,5 @@ class Config(object):
         "filename": "{FILENAME}_{FORMAT}",
         "audio_bitrate": "64k",
         "audio_sampling_rate": 22050,
+        "crf": 30,  # default is 23, for quality changes
     }
