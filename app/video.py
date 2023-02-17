@@ -215,14 +215,12 @@ def create_temporay_audio_file(video, settings, dimension="360"):
     )
     create_path(final_path)
     filename = "temp.mp3"
-    target_bitrate = "32k"
-    target_sampling_rate = 22050
     video_clip = mp.VideoFileClip(video)
     audio_clip = video_clip.audio
     audio_clip.write_audiofile(
         os.path.join(final_path, filename),
-        bitrate=target_bitrate,
-        fps=target_sampling_rate,
+        bitrate=video_config.get("audio_bitrate"),
+        fps=video_config.get("audio_sampling_rate"),
     )
     audio_clip.close()
     video_clip.close()

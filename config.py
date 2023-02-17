@@ -35,4 +35,6 @@ class Config(object):
         "formats": [360, 480, 720, 1080],
         "path": "videos/{ID}/",
         "filename": "{FILENAME}_{FORMAT}",
+        "audio_bitrate": "64k",
+        "audio_sampling_rate": 22050,
     }
