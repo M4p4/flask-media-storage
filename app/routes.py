@@ -13,7 +13,10 @@ def index():
         "use_watermark": True,
         "watermark_text": "watermark.com",
     }
-    video.process_video("", settings)
+    cover, thumbnails, videos = video.process_video("", settings)
+    print("JOB DONE")
+    print(cover)
+    print(videos)
     return "Flask Media Storage Version 0.1"
 
 

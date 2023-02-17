@@ -6,6 +6,8 @@ import numpy as np
 import random
 import io
 from PIL import Image
+import moviepy.editor as mp
+import subprocess
 
 
 extensions = {"JPEG": ".jpg", "PNG": ".png", "WEBP": ".webp"}
@@ -26,7 +28,7 @@ def process_video(source, settings):
         thumbnail_config = app.config["IMAGE_SETTINGS"]["THUMBNAIL"]
         video_config = app.config["VIDEO_SETTINGS"]
 
-        source = os.path.join(os.getcwd(), "example3.mp4")
+        source = os.path.join(os.getcwd(), "example.mp4")
 
         video = cv2.VideoCapture(source)
 
@@ -58,14 +60,38 @@ def process_video(source, settings):
         for i in range(0, amount):
             thumbnails.append(create_thumbnail(screenshots[i], settings, i + 1))
 
+        # audio
+        audio_temp_file = create_temporay_audio_file(source, settings)
+
         # videos
         for video_dimensions in video_config.get("formats"):
             video = cv2.VideoCapture(source)
-            videos.append(
-                create_video(video, dimensions.get(str(video_dimensions)), settings)
+            video_path = create_video(
+                video, dimensions.get(str(video_dimensions)), settings
             )
-            video.release()
-
+            if video_path:
+                videos.append(video_path)
+                video.release()
+                ffmpeg_command = [
+                    "ffmpeg",
+                    "-y",
+                    "-i",
+                    os.path.join(app.root_path, video_path),
+                    "-i",
+                    audio_temp_file,
+                    "-c:v",
+                    "copy",
+                    "-c:a",
+                    "aac",
+                    os.path.join(app.root_path, video_path.replace(".mp4", "_tmp.mp4")),
+                ]
+                subprocess.call(ffmpeg_command)
+                delete_file(os.path.join(app.root_path, video_path))
+                os.rename(
+                    os.path.join(app.root_path, video_path.replace(".mp4", "_tmp.mp4")),
+                    os.path.join(app.root_path, video_path),
+                )
+        delete_file(audio_temp_file)
         e2 = cv2.getTickCount()
         t = (e2 - e1) / cv2.getTickFrequency()
         print(t)
@@ -102,6 +128,7 @@ def create_video(video, video_dimensions, settings):
         .replace("{ID}", settings.get("id"))
         .replace("{FORMAT}", str(video_dimensions[1]))
     )
+
     width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
     is_portrait = height > width
@@ -116,16 +143,19 @@ def create_video(video, video_dimensions, settings):
         return
 
     fourcc = cv2.VideoWriter_fourcc(*"avc1")
+    fps = int(video.get(cv2.CAP_PROP_FPS))
+
     video_writer = cv2.VideoWriter(
         os.path.join(final_path, final_filename),
         fourcc,
-        30,
+        fps,
         (output_width, output_height),
     )
     while True:
         ret, frame = video.read()
         if not ret:
             break
+
         resized_frame = cv2.resize(
             frame, (output_width, output_height), interpolation=cv2.INTER_AREA
         )
@@ -150,6 +180,7 @@ def create_video(video, video_dimensions, settings):
             )
         video_writer.write(resized_frame)
     video_writer.release()
+
     return os.path.join(
         app.config["BASE_DIR"],
         video_path,
@@ -162,6 +193,33 @@ def get_video_screenshot(video, frame_number):
     _, frame = video.read()
     _, img = cv2.imencode(".png", frame)
     return np.array(img).tobytes()
+
+
+def create_temporay_audio_file(video, settings, dimension="360"):
+    video_config = app.config["VIDEO_SETTINGS"]
+    video_path = (
+        video_config.get("path")
+        .replace("{ID}", settings.get("id"))
+        .replace("{FORMAT}", dimension)
+    )
+    final_path = os.path.join(
+        app.root_path,
+        app.config["BASE_DIR"],
+        video_path,
+    )
+    filename = "temp.mp3"
+    target_bitrate = "32k"
+    target_sampling_rate = 22050
+    video_clip = mp.VideoFileClip(video)
+    audio_clip = video_clip.audio
+    audio_clip.write_audiofile(
+        os.path.join(final_path, filename),
+        bitrate=target_bitrate,
+        fps=target_sampling_rate,
+    )
+    audio_clip.close()
+    video_clip.close()
+    return os.path.join(final_path, filename)
 
 
 def create_thumbnail(screenshot, settings, seq: int):
