@@ -10,6 +10,7 @@ from PIL import Image
 
 extensions = {"JPEG": ".jpg", "PNG": ".png", "WEBP": ".webp"}
 dimensions = {
+    "1080": (1920, 1080, 1.2),
     "720": (1280, 720, 1.0),
     "480": (854, 480, 0.7),
     "360": (480, 360, 0.5),
@@ -21,6 +22,7 @@ def process_video(source, settings):
     videos = []
     cover = None
     try:
+        e1 = cv2.getTickCount()
         thumbnail_config = app.config["IMAGE_SETTINGS"]["THUMBNAIL"]
         video_config = app.config["VIDEO_SETTINGS"]
 
@@ -64,6 +66,10 @@ def process_video(source, settings):
             )
             video.release()
 
+        e2 = cv2.getTickCount()
+        t = (e2 - e1) / cv2.getTickFrequency()
+        print(t)
+
     except Exception as e:
         print(str(e))
         # rollback something went wrong
@@ -105,6 +111,10 @@ def create_video(video, video_dimensions, settings):
     else:
         output_width = video_dimensions[0]
         output_height = video_dimensions[1]
+
+    if height < output_height:
+        return
+
     fourcc = cv2.VideoWriter_fourcc(*"avc1")
     video_writer = cv2.VideoWriter(
         os.path.join(final_path, final_filename),

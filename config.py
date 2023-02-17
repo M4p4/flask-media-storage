@@ -30,9 +30,9 @@ class Config(object):
 
     # VIDEO SETTINGS
     # Supported quality formats
-    # 720, 480, 360
+    # 1080, 720, 480, 360
     VIDEO_SETTINGS = {
-        "formats": [360, 480, 720],
+        "formats": [360, 480, 1080],
         "path": "videos/{ID}/",
         "filename": "{FILENAME}_{FORMAT}",
     }
