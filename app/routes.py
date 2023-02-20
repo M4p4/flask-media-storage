@@ -53,16 +53,19 @@ def task_status(uid):
     if task.state == "FAILURE":
         return jsonify({"status": task.state, "error": str(task.info)})
 
-    return jsonify(
-        {
-            "status": task.state,
-            "result": {
-                "cover": task.info.get("cover", ""),
-                "videos": task.info.get("videos", []),
-                "thumbnails": task.info.get("thumbnails", []),
-            },
-        }
-    )
+    if task.state == "SUCCESS":
+        return jsonify(
+            {
+                "status": task.state,
+                "result": {
+                    "cover": task.info.get("cover", ""),
+                    "videos": task.info.get("videos", []),
+                    "thumbnails": task.info.get("thumbnails", []),
+                },
+            }
+        )
+
+    return jsonify({"status": task.state})
 
 
 @app.route("/%s/<path:path>" % (app.config["BASE_DIR"]))
