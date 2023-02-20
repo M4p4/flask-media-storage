@@ -15,6 +15,20 @@ def index():
 @app.route("/video", methods=["POST"])
 def add_video():
     file = request.files["file"]
+    if request.files["file"].filename == "":
+        return jsonify({"error": "file is required."}), 400
+
+    point_split = file.filename.split(".")
+    extension = point_split[len(point_split) - 1]
+    if extension != "mp4" and extension != "mov":
+        return jsonify({"error": "format not supported"}), 400
+
+    if not request.form.get("id"):
+        return jsonify({"error": "id is required"}), 400
+
+    if not request.form.get("filename"):
+        return jsonify({"error": "filename is required"}), 400
+
     filename = secure_filename(file.filename)
     tmp_path = os.path.join(app.root_path, app.config["BASE_DIR"], "tmp")
     helper.create_path(tmp_path)
