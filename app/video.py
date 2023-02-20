@@ -26,11 +26,10 @@ def process_video(source, settings):
     cover = None
     audio_temp_file = None
     try:
-        e1 = cv2.getTickCount()
         thumbnail_config = app.config["IMAGE_SETTINGS"]["THUMBNAIL"]
         video_config = app.config["VIDEO_SETTINGS"]
 
-        source = os.path.join(os.getcwd(), "example.mp4")
+        source = os.path.join(os.getcwd(), "example5.mp4")
 
         video = cv2.VideoCapture(source)
 
@@ -73,10 +72,6 @@ def process_video(source, settings):
             if video_path:
                 videos.append(video_path)
         delete_file(audio_temp_file)
-
-        e2 = cv2.getTickCount()
-        t = (e2 - e1) / cv2.getTickFrequency()
-        print(f"Job done in {t} seconds")
 
     except Exception as e:
         print(str(e))
