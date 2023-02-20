@@ -92,6 +92,7 @@ def create_video(video, audio, video_dimensions, settings):
         video_config.get("path")
         .replace("{ID}", settings.get("id"))
         .replace("{FORMAT}", str(video_dimensions[1]))
+        .replace("{RID}", helper.get_random_id(app.config["RANDOM_ID_LEN"]))
     )
     final_path = os.path.join(
         app.root_path,
@@ -107,6 +108,7 @@ def create_video(video, audio, video_dimensions, settings):
         final_filename.replace("{FILENAME}", settings.get("filename"))
         .replace("{ID}", settings.get("id"))
         .replace("{FORMAT}", str(video_dimensions[1]))
+        .replace("{RID}", helper.get_random_id(app.config["RANDOM_ID_LEN"]))
     )
 
     try:
@@ -208,7 +210,7 @@ def create_thumbnail(screenshot, settings, seq: int):
         thumbnail_config.get("path")
         .replace("{ID}", settings.get("id"))
         .replace("{SEQ}", str(seq))
-        .replace("{RID}", helper.get_random_id(6))
+        .replace("{RID}", helper.get_random_id(app.config["RANDOM_ID_LEN"]))
     )
 
     final_path = os.path.join(
@@ -225,7 +227,7 @@ def create_thumbnail(screenshot, settings, seq: int):
 
     final_filename = (
         final_filename.replace("{FILENAME}", settings.get("filename"))
-        .replace("{RID}", helper.get_random_id(6))
+        .replace("{RID}", helper.get_random_id(app.config["RANDOM_ID_LEN"]))
         .replace("{SEQ}", str(seq))
     )
 
@@ -262,7 +264,11 @@ def create_thumbnail(screenshot, settings, seq: int):
 
 def create_cover(screenshot, settings):
     cover_config = app.config["IMAGE_SETTINGS"]["COVER"]
-    cover_path = cover_config.get("path").replace("{ID}", settings.get("id"))
+    cover_path = (
+        cover_config.get("path")
+        .replace("{ID}", settings.get("id"))
+        .replace("{RID}", helper.get_random_id(app.config["RANDOM_ID_LEN"]))
+    )
     final_path = os.path.join(
         app.root_path,
         app.config["BASE_DIR"],
@@ -272,7 +278,9 @@ def create_cover(screenshot, settings):
         cover_config.get("filename"),
         extensions.get(cover_config.get("extension")),
     )
-    final_filename = final_filename.replace("{FILENAME}", settings.get("filename"))
+    final_filename = final_filename.replace(
+        "{FILENAME}", settings.get("filename")
+    ).replace("{RID}", helper.get_random_id(app.config["RANDOM_ID_LEN"]))
     helper.create_path(final_path)
     image = Image.open(io.BytesIO(screenshot))
     is_portrait = image.height > image.width
