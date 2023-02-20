@@ -3,17 +3,9 @@ from app import video
 
 
 @celery.task(name="video_task", bind=True)
-def video_task(self, filename):
+def video_task(self, file, settings):
     self.update_state(state="STARTED")
-    video_id = 1337
-    filename = "test"
-    settings = {
-        "id": str(video_id),
-        "filename": filename,
-        "use_watermark": True,
-        "watermark_text": "watermark.com",
-    }
-    cover, thumbnails, videos = video.process_video("", settings)
+    cover, thumbnails, videos = video.process_video(file, settings)
     return {
         "cover": cover,
         "thumbnails": thumbnails,

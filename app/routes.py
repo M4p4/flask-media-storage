@@ -1,7 +1,10 @@
 from app import app
-from app import video
 from flask import send_from_directory, request, jsonify, url_for
 from app import tasks
+import os
+from werkzeug.utils import secure_filename
+from app import helper
+import uuid
 
 
 @app.route("/")
@@ -11,9 +14,19 @@ def index():
 
 @app.route("/video", methods=["POST"])
 def add_video():
-    content = request.json
-    task_type = content["type"]
-    task = tasks.video_task.delay(int(task_type))
+    file = request.files["file"]
+    filename = secure_filename(file.filename)
+    tmp_path = os.path.join(app.root_path, app.config["BASE_DIR"], "tmp")
+    helper.create_path(tmp_path)
+    tmp_file = os.path.join(tmp_path, f"{uuid.uuid1()}_{filename}")
+    file.save(tmp_file)
+    settings = {
+        "id": str(request.form.get("id")),
+        "filename": request.form.get("filename"),
+        "use_watermark": request.form.get("use_watermark", False, type=bool),
+        "watermark_text": request.form.get("watermark_text", ""),
+    }
+    task = tasks.video_task.delay(tmp_file, settings)
     return (
         jsonify({"tracker": url_for("task_status", uid=task.id)}),
         202,
@@ -23,7 +36,6 @@ def add_video():
 @app.route("/status/<uid>")
 def task_status(uid):
     task = tasks.video_task.AsyncResult(uid)
-    print(task.info)
 
     if task.state == "FAILURE":
         return jsonify({"status": task.state, "error": str(task.info)})

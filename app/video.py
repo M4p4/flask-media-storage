@@ -7,8 +7,8 @@ import random
 import io
 from PIL import Image
 import moviepy.editor as mp
-import shutil
 import ffmpeg
+from app import helper
 
 
 extensions = {"JPEG": ".jpg", "PNG": ".png", "WEBP": ".webp"}
@@ -28,9 +28,6 @@ def process_video(source, settings):
     try:
         thumbnail_config = app.config["IMAGE_SETTINGS"]["THUMBNAIL"]
         video_config = app.config["VIDEO_SETTINGS"]
-
-        source = os.path.join(os.getcwd(), "example5.mp4")
-
         video = cv2.VideoCapture(source)
 
         # video runtime in seconds
@@ -71,18 +68,20 @@ def process_video(source, settings):
             )
             if video_path:
                 videos.append(video_path)
-        delete_file(audio_temp_file)
+        helper.delete_file(audio_temp_file)
+        helper.delete_file(source)
 
     except Exception as e:
         print(str(e))
         # rollback something went wrong
-        delete_directory(os.path.join(app.root_path, cover))
+        helper.delete_file(source)
+        helper.delete_directory(os.path.join(app.root_path, cover))
         if len(thumbnails) > 0:
-            delete_directory(os.path.join(app.root_path, thumbnails[0]))
+            helper.delete_directory(os.path.join(app.root_path, thumbnails[0]))
         if len(videos) > 0:
-            delete_directory(os.path.join(app.root_path, videos[0]))
+            helper.delete_directory(os.path.join(app.root_path, videos[0]))
         if audio_temp_file:
-            delete_directory(audio_temp_file)
+            helper.delete_directory(audio_temp_file)
         return None, [], []
     return cover, thumbnails, videos
 
@@ -99,7 +98,7 @@ def create_video(video, audio, video_dimensions, settings):
         app.config["BASE_DIR"],
         video_path,
     )
-    create_path(final_path)
+    helper.create_path(final_path)
     final_filename = "%s%s" % (
         video_config.get("filename"),
         ".mp4",
@@ -192,7 +191,7 @@ def create_temporay_audio_file(video, settings, dimension="360"):
         app.config["BASE_DIR"],
         video_path,
     )
-    create_path(final_path)
+    helper.create_path(final_path)
     filename = "temp.mp3"
     video_clip = mp.VideoFileClip(video)
     audio_clip = video_clip.audio
@@ -219,7 +218,7 @@ def create_thumbnail(screenshot, settings, seq: int):
         app.config["BASE_DIR"],
         thumbnail_path,
     )
-    create_path(final_path)
+    helper.create_path(final_path)
     final_filename = "%s%s" % (
         thumbnail_config.get("filename"),
         extensions.get(thumbnail_config.get("extension")),
@@ -270,7 +269,7 @@ def create_cover(screenshot, settings):
         extensions.get(cover_config.get("extension")),
     )
     final_filename = final_filename.replace("{FILENAME}", settings.get("filename"))
-    create_path(final_path)
+    helper.create_path(final_path)
     image = Image.open(io.BytesIO(screenshot))
     is_portrait = image.height > image.width
     image.thumbnail((cover_config.get("width"), cover_config.get("height")))
@@ -295,29 +294,3 @@ def create_cover(screenshot, settings):
         )
     image.close()
     return os.path.join(app.config["BASE_DIR"], cover_path, final_filename)
-
-
-def create_path(path: str):
-    if not os.path.exists(path):
-        os.makedirs(path)
-
-
-def delete_directory(path: str):
-    try:
-        dir_path = os.path.dirname(os.path.abspath(path))
-        shutil.rmtree(dir_path)
-        return True
-    except Exception as e:
-        print(str(e))
-        return False
-
-
-def delete_file(path):
-    try:
-        if os.path.isfile(path):
-            os.remove(path)
-            return True
-    except Exception as e:
-        print(str(e))
-        return False
-    return False

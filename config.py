@@ -6,6 +6,7 @@ class Config(object):
 
     # BASIC SETTINGS
     BASE_DIR = "media"
+    MAX_CONTENT_LENGTH = 1024 * 1024 * 1024  # 1 gb
 
     # IMAGE SETTINGS
     # Supported file extension:
