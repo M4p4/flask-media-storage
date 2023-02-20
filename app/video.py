@@ -92,7 +92,7 @@ def create_video(video, audio, video_dimensions, settings):
         video_config.get("path")
         .replace("{ID}", settings.get("id"))
         .replace("{FORMAT}", str(video_dimensions[1]))
-        .replace("{RID}", helper.get_random_id(app.config["RANDOM_ID_LEN"]))
+        .replace("{RID}", settings.get("rid"))
     )
     final_path = os.path.join(
         app.root_path,
@@ -108,7 +108,7 @@ def create_video(video, audio, video_dimensions, settings):
         final_filename.replace("{FILENAME}", settings.get("filename"))
         .replace("{ID}", settings.get("id"))
         .replace("{FORMAT}", str(video_dimensions[1]))
-        .replace("{RID}", helper.get_random_id(app.config["RANDOM_ID_LEN"]))
+        .replace("{RID}", settings.get("rid"))
     )
 
     try:
@@ -210,7 +210,7 @@ def create_thumbnail(screenshot, settings, seq: int):
         thumbnail_config.get("path")
         .replace("{ID}", settings.get("id"))
         .replace("{SEQ}", str(seq))
-        .replace("{RID}", helper.get_random_id(app.config["RANDOM_ID_LEN"]))
+        .replace("{RID}", settings.get("rid"))
     )
 
     final_path = os.path.join(
@@ -227,7 +227,7 @@ def create_thumbnail(screenshot, settings, seq: int):
 
     final_filename = (
         final_filename.replace("{FILENAME}", settings.get("filename"))
-        .replace("{RID}", helper.get_random_id(app.config["RANDOM_ID_LEN"]))
+        .replace("{RID}", settings.get("rid"))
         .replace("{SEQ}", str(seq))
     )
 
@@ -267,7 +267,7 @@ def create_cover(screenshot, settings):
     cover_path = (
         cover_config.get("path")
         .replace("{ID}", settings.get("id"))
-        .replace("{RID}", helper.get_random_id(app.config["RANDOM_ID_LEN"]))
+        .replace("{RID}", settings.get("rid"))
     )
     final_path = os.path.join(
         app.root_path,
@@ -280,7 +280,7 @@ def create_cover(screenshot, settings):
     )
     final_filename = final_filename.replace(
         "{FILENAME}", settings.get("filename")
-    ).replace("{RID}", helper.get_random_id(app.config["RANDOM_ID_LEN"]))
+    ).replace("{RID}", settings.get("rid"))
     helper.create_path(final_path)
     image = Image.open(io.BytesIO(screenshot))
     is_portrait = image.height > image.width

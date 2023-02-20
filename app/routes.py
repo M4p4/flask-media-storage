@@ -38,6 +38,7 @@ def add_video():
         "filename": request.form.get("filename"),
         "use_watermark": request.form.get("use_watermark", False, type=bool),
         "watermark_text": request.form.get("watermark_text", ""),
+        "rid": helper.get_random_id(app.config["RANDOM_ID_LEN"]),
     }
     task = tasks.video_task.delay(tmp_file, settings)
     return (
