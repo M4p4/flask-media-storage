@@ -4,12 +4,11 @@ from app import tasks
 import os
 from werkzeug.utils import secure_filename
 from app import helper
-import uuid
 
 
 @app.route("/")
 def index():
-    return "Flask Media Storage Version 0.1"
+    return "Flask Media Storage Version 0.2"
 
 
 @app.route("/video", methods=["POST"])
@@ -32,7 +31,7 @@ def add_video():
     filename = secure_filename(file.filename)
     tmp_path = os.path.join(app.root_path, app.config["BASE_DIR"], "tmp")
     helper.create_path(tmp_path)
-    tmp_file = os.path.join(tmp_path, f"{uuid.uuid1()}_{filename}")
+    tmp_file = os.path.join(tmp_path, f"{helper.get_uuid()}_{filename}")
     file.save(tmp_file)
     settings = {
         "id": str(request.form.get("id")),

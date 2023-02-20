@@ -1,5 +1,8 @@
 import os
 import shutil
+import string
+import random
+import uuid
 
 
 def create_path(path: str):
@@ -26,3 +29,12 @@ def delete_file(path):
         print(str(e))
         return False
     return False
+
+
+def get_random_id(length):
+    letters = string.ascii_lowercase + string.digits
+    return "".join(random.choice(letters) for i in range(length))
+
+
+def get_uuid():
+    return uuid.uuid1()

@@ -59,7 +59,7 @@ def process_video(source, settings):
             thumbnails.append(create_thumbnail(screenshots[i], settings, i + 1))
 
         # audio
-        audio_temp_file = create_temporay_audio_file(source, settings)
+        audio_temp_file = create_temporay_audio_file(source)
 
         # videos
         for video_dimensions in video_config.get("formats"):
@@ -179,20 +179,17 @@ def get_video_screenshot(video, frame_number):
     return np.array(img).tobytes()
 
 
-def create_temporay_audio_file(video, settings, dimension="360"):
+def create_temporay_audio_file(video):
     video_config = app.config["VIDEO_SETTINGS"]
-    video_path = (
-        video_config.get("path")
-        .replace("{ID}", settings.get("id"))
-        .replace("{FORMAT}", dimension)
-    )
     final_path = os.path.join(
         app.root_path,
         app.config["BASE_DIR"],
-        video_path,
+        "tmp",
     )
+    print(final_path)
     helper.create_path(final_path)
-    filename = "temp.mp3"
+    filename = f"{helper.get_uuid()}.mp3"
+    print(filename)
     video_clip = mp.VideoFileClip(video)
     audio_clip = video_clip.audio
     audio_clip.write_audiofile(
@@ -211,6 +208,7 @@ def create_thumbnail(screenshot, settings, seq: int):
         thumbnail_config.get("path")
         .replace("{ID}", settings.get("id"))
         .replace("{SEQ}", str(seq))
+        .replace("{RID}", helper.get_random_id(6))
     )
 
     final_path = os.path.join(
@@ -219,12 +217,18 @@ def create_thumbnail(screenshot, settings, seq: int):
         thumbnail_path,
     )
     helper.create_path(final_path)
+
     final_filename = "%s%s" % (
         thumbnail_config.get("filename"),
         extensions.get(thumbnail_config.get("extension")),
     )
-    final_filename = final_filename.replace("{FILENAME}", settings.get("filename"))
-    final_filename = final_filename.replace("{SEQ}", str(seq))
+
+    final_filename = (
+        final_filename.replace("{FILENAME}", settings.get("filename"))
+        .replace("{RID}", helper.get_random_id(6))
+        .replace("{SEQ}", str(seq))
+    )
+
     image = Image.open(io.BytesIO(screenshot))
     is_portrait = image.height > image.width
     image.thumbnail((thumbnail_config.get("width"), thumbnail_config.get("height")))
