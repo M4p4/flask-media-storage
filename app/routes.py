@@ -11,6 +11,32 @@ def index():
     return "Flask Media Storage Version 0.2"
 
 
+@app.route("/video/<uid>", methods=["DELETE"])
+def delete_video(uid):
+    task = tasks.video_task.AsyncResult(uid)
+    if task.state == "SUCCESS":
+        files = []
+        files.append(task.info.get("cover", None))
+        videos = task.info.get("videos", [])
+        for video in videos:
+            files.append(video)
+        thumbnails = task.info.get("thumbnails", [])
+        for thumbnail in thumbnails:
+            files.append(thumbnail)
+        deleted_files = 0
+        for file in files:
+            if helper.delete_file(os.path.join(app.root_path, file)):
+                deleted_files += 1
+        return jsonify(
+            {
+                "status": "success",
+                "deleted_files": deleted_files,
+                "submitted_files": len(files),
+            }
+        )
+    return jsonify({"status": "failed", "message": "invalid task id"})
+
+
 @app.route("/video", methods=["POST"])
 def add_video():
     file = request.files["file"]
@@ -52,12 +78,13 @@ def task_status(uid):
     task = tasks.video_task.AsyncResult(uid)
 
     if task.state == "FAILURE":
-        return jsonify({"status": task.state, "error": str(task.info)})
+        return jsonify({"status": task.state, "error": str(task.info), "media_id": uid})
 
     if task.state == "SUCCESS":
         return jsonify(
             {
                 "status": task.state,
+                "media_id": uid,
                 "result": {
                     "cover": task.info.get("cover", ""),
                     "videos": task.info.get("videos", []),
