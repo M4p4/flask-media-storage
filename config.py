@@ -8,6 +8,8 @@ class Config(object):
     BASE_DIR = "media"
     MAX_CONTENT_LENGTH = 1024 * 1024 * 1024  # 1 gb
     RANDOM_ID_LEN = 6  # {RID} length
+    ALLOWED_VIDEO_EXTENSIONS = ["mp4", "mov", "webm"]
+    ALLOWED_IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp"]
 
     # IMAGE SETTINGS
     # Supported file extension:

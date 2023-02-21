@@ -85,11 +85,12 @@ def add_media():
     media_type = request.form.get("media_type")
     point_split = file.filename.split(".")
     extension = point_split[len(point_split) - 1]
-    if (media_type == "video" and extension != "mp4" and extension != "mov") or (
+    if (
+        media_type == "video"
+        and extension not in app.config["ALLOWED_VIDEO_EXTENSIONS"]
+    ) or (
         media_type == "image"
-        and extension != "jpg"
-        and extension != "jpeg"
-        and extension != "png"
+        and extension not in app.config["ALLOWED_IMAGE_EXTENSIONS"]
     ):
         return jsonify({"error": "format not supported"}), 400
 
