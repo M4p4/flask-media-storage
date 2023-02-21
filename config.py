@@ -29,9 +29,13 @@ class Config(object):
             "height": 400,
         },
         "IMAGE": {
-            "path": "images/{RANDOM}/",
-            "filename": "{FILENAME}",
-            "extension": "JPEG",
+            "path": "images/{ID}/",
+            "thumbnail_path": "thumbnail",
+            "thumbnail_width": 360,
+            "generate_thumbnail": True,
+            "filename": "{RID}_{FILENAME}",
+            "extension": "WEBP",
+            "width": 1500,
         },
     }
 
