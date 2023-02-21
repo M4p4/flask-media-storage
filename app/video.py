@@ -136,10 +136,14 @@ def create_video(video, audio, video_dimensions, settings):
 
     # 300p offset
     if height < output_height:
-        if (height + 300) < output_height:
+        if (
+            video_config.get("use_offset")
+            and (height + video_config.get("offset")) >= output_height
+        ):
+            output_height = height
+            output_width = width
+        else:
             return
-        output_height = height
-        output_width = width
 
     font_size = int(math.floor(24 * dimensions.get(str(video_dimensions[1]))[2]))
     video_source = (
