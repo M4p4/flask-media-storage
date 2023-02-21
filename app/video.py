@@ -161,15 +161,23 @@ def create_video(video, audio, video_dimensions, settings):
         else (ffmpeg.input(video).filter("scale", output_width, output_height))
     )
 
-    audio_source = ffmpeg.input(audio)
-    ffmpeg.output(
-        video_source,
-        audio_source,
-        os.path.join(final_path, final_filename),
-        vcodec="libx264",
-        acodec="aac",
-        crf=video_config.get("crf"),
-    ).overwrite_output().run()
+    if audio is not None:
+        audio_source = ffmpeg.input(audio)
+        ffmpeg.output(
+            video_source,
+            audio_source,
+            os.path.join(final_path, final_filename),
+            vcodec="libx264",
+            acodec="aac",
+            crf=video_config.get("crf"),
+        ).overwrite_output().run()
+    else:
+        ffmpeg.output(
+            video_source,
+            os.path.join(final_path, final_filename),
+            vcodec="libx264",
+            crf=video_config.get("crf"),
+        ).overwrite_output().run()
 
     return os.path.join(
         app.config["BASE_DIR"],
@@ -192,12 +200,14 @@ def create_temporay_audio_file(video):
         app.config["BASE_DIR"],
         "tmp",
     )
-    print(final_path)
     helper.create_path(final_path)
     filename = f"{helper.get_uuid()}.mp3"
-    print(filename)
     video_clip = mp.VideoFileClip(video)
     audio_clip = video_clip.audio
+
+    if audio_clip is None:
+        return None
+
     audio_clip.write_audiofile(
         os.path.join(final_path, filename),
         bitrate=video_config.get("audio_bitrate"),

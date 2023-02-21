@@ -10,8 +10,10 @@ def create_path(path: str):
         os.makedirs(path)
 
 
-def delete_directory(path: str):
+def delete_directory(path: str | None):
     try:
+        if path is None:
+            return True
         dir_path = os.path.dirname(os.path.abspath(path))
         shutil.rmtree(dir_path)
         return True
@@ -20,8 +22,10 @@ def delete_directory(path: str):
         return False
 
 
-def delete_file(path):
+def delete_file(path: str | None):
     try:
+        if path is None:
+            return True
         if os.path.isfile(path):
             os.remove(path)
             return True
