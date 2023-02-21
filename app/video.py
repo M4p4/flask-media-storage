@@ -61,6 +61,8 @@ def process_video(source, settings):
         # audio
         audio_temp_file = create_temporay_audio_file(source)
 
+        settings["force"] = True if len(video_config.get("formats")) == 1 else False
+
         # videos
         for video_dimensions in video_config.get("formats"):
             video_path = create_video(
@@ -139,7 +141,7 @@ def create_video(video, audio, video_dimensions, settings):
         if (
             video_config.get("use_offset")
             and (height + video_config.get("offset")) >= output_height
-        ):
+        ) or settings.get("force"):
             output_height = height
             output_width = width
         else:
