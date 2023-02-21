@@ -10,5 +10,6 @@ def video_task(self, file, settings):
         "cover": cover,
         "thumbnails": thumbnails,
         "videos": videos,
+        "file_type": "video",
         "error": None,
     }

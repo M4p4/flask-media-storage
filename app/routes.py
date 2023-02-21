@@ -84,6 +84,7 @@ def task_status(uid):
         return jsonify(
             {
                 "status": task.state,
+                "file_type": task.info.get("file_type", "video"),
                 "media_id": uid,
                 "result": {
                     "cover": task.info.get("cover", ""),
