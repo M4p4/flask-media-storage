@@ -1,9 +1,23 @@
 from app import app
-from flask import send_from_directory, request, jsonify, url_for
+from flask import send_from_directory, request, jsonify
 from app import tasks
 import os
 from werkzeug.utils import secure_filename
 from app import helper
+from functools import wraps
+
+
+def auth_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not request.form.get("auth"):
+            return jsonify({"error": "please provide a auth key"}), 400
+
+        if request.form.get("auth") != app.config["AUTH_KEY"]:
+            return jsonify({"error": "invalid auth key"}), 400
+        return f(*args, **kwargs)
+
+    return decorated
 
 
 @app.route("/")
@@ -12,6 +26,7 @@ def index():
 
 
 @app.route("/video/<uid>", methods=["DELETE"])
+@auth_required
 def delete_video(uid):
     task = tasks.video_task.AsyncResult(uid)
     if task.state == "SUCCESS":
@@ -38,6 +53,7 @@ def delete_video(uid):
 
 
 @app.route("/image/<uid>", methods=["DELETE"])
+@auth_required
 def delete_image(uid):
     task = tasks.video_task.AsyncResult(uid)
     if task.state == "SUCCESS":
@@ -61,6 +77,7 @@ def delete_image(uid):
 
 
 @app.route("/media", methods=["POST"])
+@auth_required
 def add_media():
     if request.files["file"].filename == "":
         return jsonify({"error": "file is required."}), 400
@@ -121,6 +138,7 @@ def add_media():
 
 
 @app.route("/status/<uid>")
+@auth_required
 def task_status(uid):
     task = tasks.video_task.AsyncResult(uid)
 

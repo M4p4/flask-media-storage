@@ -5,6 +5,7 @@ class Config(object):
     CELERY_RESULT_BACKEND = "redis://localhost:6379"
 
     # BASIC SETTINGS
+    AUTH_KEY = "examplekey"
     BASE_DIR = "media"
     MAX_CONTENT_LENGTH = 1024 * 1024 * 1024  # 1 gb
     RANDOM_ID_LEN = 6  # {RID} length
