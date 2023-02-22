@@ -120,7 +120,9 @@ def add_media():
     settings = {
         "id": str(request.form.get("id")),
         "filename": request.form.get("filename"),
-        "use_watermark": request.form.get("use_watermark", False, type=bool),
+        "use_watermark": request.form.get("use_watermark") == "True"
+        or request.form.get("use_watermark") == "true"
+        or request.form.get("use_watermark") == "1",
         "watermark_text": request.form.get("watermark_text", ""),
         "rid": helper.get_random_id(app.config["RANDOM_ID_LEN"]),
     }

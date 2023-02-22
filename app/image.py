@@ -1,5 +1,5 @@
 from app import app
-from PIL import Image, ImageOps, ExifTags
+from PIL import Image, ImageOps, ExifTags, ImageDraw, ImageFont
 from app import helper
 import os
 
@@ -81,6 +81,35 @@ def process_image(source, settings):
                         img.height * current_image.get("width") / img.width
                     )
                 resized_img = img.resize((output_width, output_height))
+
+                # watermark
+                if settings.get("use_watermark"):
+                    draw = ImageDraw.Draw(resized_img)
+                    text = settings.get("watermark_text")
+                    font = ImageFont.truetype(
+                        os.path.join(app.root_path, "fonts/arial.ttf"), 30
+                    )
+                    text_w, text_h = draw.textsize(text, font=font)
+                    watermark = Image.new(
+                        "RGBA", (text_w + 20, text_h + 10), (1, 1, 1, 87)
+                    )
+                    draw = ImageDraw.Draw(watermark)
+
+                    draw.text(
+                        (10, 1),
+                        text,
+                        font=font,
+                        fill=(255, 255, 255),
+                    )
+                    resized_img.paste(
+                        watermark,
+                        (
+                            resized_img.size[0] - watermark.size[0] - 10,
+                            resized_img.size[1] - watermark.size[1] - 10,
+                        ),
+                        watermark,
+                    )
+
                 resized_img.save(
                     os.path.join(current_image.get("path"), final_filename)
                 )
