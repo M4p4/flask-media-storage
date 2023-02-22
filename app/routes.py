@@ -138,7 +138,6 @@ def add_media():
 
 
 @app.route("/status/<uid>")
-@auth_required
 def task_status(uid):
     task = tasks.video_task.AsyncResult(uid)
 
