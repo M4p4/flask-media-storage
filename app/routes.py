@@ -5,6 +5,7 @@ import os
 from werkzeug.utils import secure_filename
 from app import helper
 from functools import wraps
+import validators
 
 
 def auth_required(f):
@@ -22,7 +23,7 @@ def auth_required(f):
 
 @app.route("/")
 def index():
-    return "Flask Media Storage Version 0.2"
+    return "Flask Media Storage Version 0.3"
 
 
 @app.route("/video/<uid>", methods=["DELETE"])
@@ -79,10 +80,12 @@ def delete_image(uid):
 @app.route("/media", methods=["POST"])
 @auth_required
 def add_media():
-    if request.files["file"].filename == "":
-        return jsonify({"error": "file is required."}), 400
+    download_url = True
+    if not request.form.get("url"):
+        download_url = False
 
-    file = request.files["file"]
+    if not download_url and request.files["file"].filename == "":
+        return jsonify({"error": "file or url is required."}), 400
 
     if not request.form.get("id"):
         return jsonify({"error": "id is required"}), 400
@@ -100,22 +103,25 @@ def add_media():
         return jsonify({"error": "mediatype is invalid (image and video only)"}), 400
 
     media_type = request.form.get("media_type")
-    point_split = file.filename.split(".")
-    extension = point_split[len(point_split) - 1]
-    if (
-        media_type == "video"
-        and extension not in app.config["ALLOWED_VIDEO_EXTENSIONS"]
-    ) or (
-        media_type == "image"
-        and extension not in app.config["ALLOWED_IMAGE_EXTENSIONS"]
-    ):
-        return jsonify({"error": "format not supported"}), 400
+    if download_url:
+        url = request.form.get("url")
+        if not validators.url(url):
+            return jsonify({"error": "invalid url"}), 400
+        tmp_file = url
+        if not helper.validate_file_extension(tmp_file, media_type):
+            return jsonify({"error": "url format not supported"}), 400
+        file_extension = helper.get_file_extension(tmp_file)
+    else:
+        file = request.files["file"]
+        if not helper.validate_file_extension(file.filename, media_type):
+            return jsonify({"error": "format not supported"}), 400
 
-    filename = secure_filename(file.filename)
-    tmp_path = os.path.join(app.root_path, app.config["BASE_DIR"], "tmp")
-    helper.create_path(tmp_path)
-    tmp_file = os.path.join(tmp_path, f"{helper.get_uuid()}_{filename}")
-    file.save(tmp_file)
+        filename = secure_filename(file.filename)
+        tmp_path = os.path.join(app.root_path, app.config["BASE_DIR"], "tmp")
+        helper.create_path(tmp_path)
+        tmp_file = os.path.join(tmp_path, f"{helper.get_uuid()}_{filename}")
+        file.save(tmp_file)
+        file_extension = helper.get_file_extension(filename)
 
     settings = {
         "id": str(request.form.get("id")),
@@ -125,6 +131,8 @@ def add_media():
         or request.form.get("use_watermark") == "1",
         "watermark_text": request.form.get("watermark_text", ""),
         "rid": helper.get_random_id(app.config["RANDOM_ID_LEN"]),
+        "download_url": download_url,
+        "file_extension": file_extension,
     }
 
     task = (
@@ -134,7 +142,12 @@ def add_media():
     )
 
     return (
-        jsonify({"media_id": task.id}),
+        jsonify(
+            {
+                "media_id": task.id,
+                "download_url": download_url,
+            }
+        ),
         202,
     )
 

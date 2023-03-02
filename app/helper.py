@@ -3,6 +3,8 @@ import shutil
 import string
 import random
 import uuid
+from app import app
+import requests
 
 
 def create_path(path: str):
@@ -42,3 +44,35 @@ def get_random_id(length):
 
 def get_uuid():
     return uuid.uuid1()
+
+
+def get_file_extension(filename):
+    point_split = filename.split(".")
+    extension = point_split[len(point_split) - 1]
+    if extension.find("?") != -1:
+        extension = extension[0 : extension.find("?")]
+    return extension
+
+
+def validate_file_extension(filename, media_type):
+    extension = get_file_extension(filename)
+    if (
+        media_type == "video"
+        and extension not in app.config["ALLOWED_VIDEO_EXTENSIONS"]
+    ) or (
+        media_type == "image"
+        and extension not in app.config["ALLOWED_IMAGE_EXTENSIONS"]
+    ):
+        return False
+    return True
+
+
+def download_file(url):
+    tmp_path = os.path.join(app.root_path, app.config["BASE_DIR"], "tmp")
+    filename = f"{get_uuid()}.{get_file_extension(url)}"
+    final_path = os.path.join(tmp_path, filename)
+    with requests.get(url, stream=True) as r:
+        with open(final_path, "wb") as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                f.write(chunk)
+    return final_path

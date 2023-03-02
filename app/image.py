@@ -46,20 +46,26 @@ def process_image(source, settings):
             ):
                 break
             helper.create_path(current_image.get("path"))
+
+            if settings.get("download_url"):
+                source = helper.download_file(source)
+                settings["download_url"] = False
             img = Image.open(source)
 
             # fix rotation problems source: https://stackoverflow.com/questions/4228530/pil-thumbnail-is-rotating-my-image
             for orientation in ExifTags.TAGS.keys():
                 if ExifTags.TAGS[orientation] == "Orientation":
                     break
-            exif = dict(img._getexif().items())
 
-            if exif[orientation] == 3:
-                img = img.rotate(180, expand=True)
-            elif exif[orientation] == 6:
-                img = img.rotate(270, expand=True)
-            elif exif[orientation] == 8:
-                img = img.rotate(90, expand=True)
+            if img._getexif() != None:
+                exif = dict(img._getexif().items())
+
+                if exif[orientation] == 3:
+                    img = img.rotate(180, expand=True)
+                elif exif[orientation] == 6:
+                    img = img.rotate(270, expand=True)
+                elif exif[orientation] == 8:
+                    img = img.rotate(90, expand=True)
 
             if current_image.get("thumbnail"):
                 thumb = ImageOps.fit(

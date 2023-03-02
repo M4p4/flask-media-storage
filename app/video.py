@@ -28,6 +28,10 @@ def process_video(source, settings):
     try:
         thumbnail_config = app.config["IMAGE_SETTINGS"]["THUMBNAIL"]
         video_config = app.config["VIDEO_SETTINGS"]
+
+        if settings.get("download_url"):
+            source = helper.download_file(source)
+
         video = cv2.VideoCapture(source)
 
         # video runtime in seconds
