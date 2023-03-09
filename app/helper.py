@@ -37,7 +37,7 @@ def delete_file(path: str | None):
     return False
 
 
-def get_random_id(length):
+def get_random_id(length: int):
     letters = string.ascii_lowercase + string.digits
     return "".join(random.choice(letters) for i in range(length))
 
@@ -46,7 +46,7 @@ def get_uuid():
     return uuid.uuid1()
 
 
-def get_file_extension(filename):
+def get_file_extension(filename: str):
     point_split = filename.split(".")
     extension = point_split[len(point_split) - 1]
     if extension.find("?") != -1:
@@ -54,7 +54,7 @@ def get_file_extension(filename):
     return extension
 
 
-def validate_file_extension(filename, media_type):
+def validate_file_extension(filename: str, media_type: str):
     extension = get_file_extension(filename)
     if (
         media_type == "video"
@@ -67,7 +67,7 @@ def validate_file_extension(filename, media_type):
     return True
 
 
-def download_file(url):
+def download_file(url: str):
     tmp_path = os.path.join(app.root_path, app.config["BASE_DIR"], "tmp")
     filename = f"{get_uuid()}.{get_file_extension(url)}"
     final_path = os.path.join(tmp_path, filename)
