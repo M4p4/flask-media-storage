@@ -13,13 +13,13 @@ To get started with the Media Storage Flask Application, follow these steps:
 
 ### Config
 
-In the `config.py`file in the root dir you can configurate image and video settings. You also need to set there an AUTH_KEY because every request needs the AUTH_KEY as param.
+In the `config.py` file in the root dir you can configurate image and video settings. You also need to set there an AUTH_KEY because every request needs the AUTH_KEY as param.
 
 There tons of config options in the config file like sizes and quality.
 
 ### Add Video / Image
 
-To add an Video or Image to the storage you call the `/media` (http://127.0.0.1:3000/media for local) route with a POST request.
+To add an Video or Image to the storage you call the `/media` (http://127.0.0.1:3000/media for local) route with a `POST` request.
 
 The following params are needed
 
