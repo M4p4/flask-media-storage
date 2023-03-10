@@ -9,7 +9,7 @@ To get started with the Media Storage Flask Application, follow these steps:
 1. Clone the repository from GitHub using git clone `https://github.com/M4p4/flask-media-storage.git`
 2. Install the necessary dependencies by running `pip install -r requirements.txt`.
 3. Run the application using `FLASK_DEBUG=1 flask run -p 3000`.
-4. Run background worker for image / video progessing with `celery -A app.celery worker --loglevel=info`.
+4. Run background worker for image / video progressing with `celery -A app.celery worker --loglevel=info`.
 
 ### Config
 
@@ -24,8 +24,8 @@ To add an Video or Image to the storage you call the `/media` (http://127.0.0.1:
 The following params are needed
 
 ```
-file - byte array - the file the user uploaded to backend
-url - string -  if file is empty it and url is given it downloads file from url
+file - byte array - the file the user uploaded (can be empty)
+url - string -  if file is empty and url is given, it downloads file from url
 id - string - an id from backend
 filename - string - filename from backend can be also a random genrated string
 use_watermark - boolean - use watermark in image or video
